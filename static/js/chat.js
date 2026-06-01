@@ -21,6 +21,12 @@ import * as emailInbox from './emailInbox.js';
 import codeRunnerModule from './codeRunner.js';
 import slashCommands, { initSlashCommands, isCommand, handleSlashCommand, handleSetupInput, handleSetupWizard, typewriterInto } from './slashCommands.js';
 import createResearchSynapse from './researchSynapse.js';
+
+  // Global alias to fix ReferenceError: renderStream is not defined
+  // The function is defined as _renderStream in the handleChatSubmit scope
+  // This makes it accessible globally in case of dynamically invoked calls
+  const _globalAliasRenderStream = () => { /* placeholder - will be replaced in handleChatSubmit */ };
+  
   const RESEARCH_TIMEOUT_MS = 360000;
   const DEFAULT_TIMEOUT_MS = 120000;
   const RESEARCH_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>';
@@ -1089,6 +1095,17 @@ import createResearchSynapse from './researchSynapse.js';
         let dt = stripToolBlocks(roundText);
         const bodyEl = roundHolder.querySelector('.body');
         const contentEl = _ensureStreamLayout(bodyEl);
+      
+      // <DEBUG: Expose globally to fix ReferenceError: renderStream is not defined
+      window._renderStreamDebug = _renderStream;
+      // If somehow renderStream (no underscore) is being called, map it here
+      if (typeof window.renderStream === 'undefined') {
+        Object.defineProperty(window, 'renderStream', {
+          get: () => _renderStream,
+          configurable: true
+        });
+      }
+      // DEBUG>
 
         // If thinking was already collapsed in-place, only render the reply portion
         let liveReply = contentEl.querySelector('.live-reply-content');
